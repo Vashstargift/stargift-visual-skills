@@ -1,0 +1,46 @@
+{
+ "tshirt-pele.jpg": {
+  "product_id": "712147212671",
+  "title": "Пеле"
+ },
+ "historic-lumiere-brown.jpg": {
+  "product_id": "378087575372",
+  "title": "Луи Люмьер"
+ },
+ "historic-korolev-silver.jpg": {
+  "product_id": "351789255881",
+  "title": "Сергей Королёв"
+ },
+ "photo-deeppurple-brown-velvet.jpg": {
+  "product_id": "550827571932",
+  "title": "Иэн Гиллан, Иэн Пейс, Роджер Гловер, Дон Эйри, Стив Морс (Deep Purple)"
+ },
+ "vinyl-vanillaice-gold.jpg": {
+  "product_id": "950883088051",
+  "title": "Роберт Мэтью Ван Уинкл (Vanilla Ice)"
+ },
+ "vinyl-snoop-gold.jpg": {
+  "product_id": "826619236232",
+  "title": "Снуп Догг"
+ },
+ "retro-gracekelly-gold-baroque.jpg": {
+  "product_id": "284684183932",
+  "title": "Грейс Келли — открытка с автографом"
+ },
+ "retro-lollobrigida-silver-pearl.jpg": {
+  "product_id": "314870020411",
+  "title": "Джина Лоллобриджида — фото с автографом"
+ },
+ "glassfloat-pacino-poster.jpg": {
+  "product_id": "sg_1777915174_52dc4023",
+  "title": "Аль Пачино — постер «Крёстный отец» (между стёкол)"
+ },
+ "cinema-pacino-script-green.jpg": {
+  "product_id": "sg_1784983480_018194bd",
+  "title": "Аль Пачино — сценарий «Крёстный отец» (композит, зелёный бархат)"
+ },
+ "cinema-tarantino-script-burgundy.jpg": {
+  "product_id": "895429086532",
+  "title": "Тарантино — сценарий «Криминальное чтиво» (композит, бордовый бархат)"
+ }
+}
