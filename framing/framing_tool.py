@@ -57,7 +57,8 @@ def _resolve_style(frame_style: str, style_notes: str) -> tuple:
     extra = (style_notes or "").strip()
     if extra:
         prompt = prompt + ". Дополнительно: " + extra
-    return prompt, ref, bool(v.get("packshot"))
+    shield = "silver" if (v.get("shield") == "silver" or "серебр" in extra.lower()) else "gold"
+    return prompt, ref, bool(v.get("packshot")), shield
 OUT_DIR = Path("/Users/docbrown/stargift-framing-tests/out")
 
 FONT_REGULAR = "/Users/docbrown/Library/Fonts/proximanova_regular.ttf"
@@ -92,7 +93,7 @@ def _higgsfield_frame(photo_path: str, style_notes: str = "", frame_style: str =
     sys.path.insert(0, "/Users/docbrown/hermes-doc")
     import higgsfield_client as hf
 
-    style, ref_path, is_packshot = _resolve_style(frame_style, style_notes)
+    style, ref_path, is_packshot, shield_color = _resolve_style(frame_style, style_notes)
     if is_packshot:
         # Packshot (Вашик 30.07): предмет на некрасивом фоне → нейтральный
         # студийный фон, БЕЗ рамы и таблички. Эталон — бутса CR7.
@@ -110,7 +111,8 @@ def _higgsfield_frame(photo_path: str, style_notes: str = "", frame_style: str =
             "НЕ ОБРЕЗАЙ края кадра (инцидент 30.07: кроп фото Пачино-Деппа); окно "
             "паспарту подстрой под пропорции фото. Задача — только ОКРУЖЕНИЕ: убери "
             f"посторонние предметы фона и оформи предмет в наше оформление: {style} "
-            "(второй референс показывает пример), внизу по центру пустая золотая табличка "
+            f"(второй референс показывает пример), внизу по центру пустая "
+            f"{'СЕРЕБРЯНАЯ' if shield_color == 'silver' else 'золотая'} табличка "
             "БЕЗ надписей — СТРОГО ПРЯМОУГОЛЬНАЯ с прямыми углами, без фигурных "
             "вырезов и скруглений. Каталожное фото анфас."
             # белый внешний фон — только если пожелания не задают свой
@@ -136,7 +138,7 @@ def _higgsfield_frame(photo_path: str, style_notes: str = "", frame_style: str =
     raise hf.HiggsfieldError("генерация не завершилась за отведённое время")
 
 
-def _find_empty_plate(im, zone=(0.20, 0.80, 0.66)) -> tuple | None:
+def _find_empty_plate(im, zone=(0.20, 0.80, 0.66), plate_color="gold") -> tuple | None:
     """Пустая золотая пластина. zone=(x0, x1, y0) в долях кадра — где искать.
     Окантовка паспарту — длинные золотые ряды на всю ширину — отбрасывается
     фильтром длины ряда. Для композитов зону сужаем до правого-нижнего угла:
@@ -148,6 +150,9 @@ def _find_empty_plate(im, zone=(0.20, 0.80, 0.66)) -> tuple | None:
     def is_gold(c):
         # окно широкое: на тёмном фоне пластина даёт яркие блики (252,226,165)
         r, g, b = c
+        if plate_color == "silver":
+            # серебро: светлый металлик с низкой насыщенностью (Вашик 30.07)
+            return 150 < r < 245 and 150 < g < 245 and 150 < b < 245 and (max(c) - min(c)) < 26
         return 140 < r and 110 < g < 238 and 40 < b < 200 and r > g > b and (r - b) > 45
 
     rows = {}
@@ -186,12 +191,12 @@ def _find_empty_plate(im, zone=(0.20, 0.80, 0.66)) -> tuple | None:
 
 
 def _engrave_shield(jpeg_bytes: bytes, person_latin: str, zone=(0.20, 0.80, 0.66),
-                    plate_box=None) -> tuple[bytes, bool]:
+                    plate_box=None, plate_color="gold") -> tuple[bytes, bool]:
     """Гравировка «PERSONALLY SIGNED BY / ИМЯ» на пустой пластине (найденной
     детектором или заданной явно plate_box). → (jpeg, гравировка_удалась)."""
     from PIL import Image, ImageDraw, ImageFont
     im = Image.open(io.BytesIO(jpeg_bytes)).convert("RGB")
-    box = tuple(plate_box) if plate_box else _find_empty_plate(im, zone)
+    box = tuple(plate_box) if plate_box else _find_empty_plate(im, zone, plate_color)
     if not box:
         return jpeg_bytes, False
     bw, bh = box[2] - box[0], box[3] - box[1]
@@ -381,10 +386,10 @@ def frame_exhibit_photo(photo_path: str, person_latin: str, style_notes: str = "
     # (пиджак Пачино, 30.07) проходили золотой фильтр и гравировка ложилась на кадр.
     # Стиль может задать свою зону (plate_zone в framing_styles.json) — например,
     # без паспарту шильд на нижней ПЛАНКЕ рамы (y от 0.90).
-    _zone = tuple(approved_styles().get("styles", {})
-                  .get((frame_style or "").strip(), {}).get("plate_zone")
-                  or (0.25, 0.75, 0.78))
-    final, engraved = (_engrave_shield(raw, person_latin, zone=_zone)
+    _cfg = approved_styles().get("styles", {}).get((frame_style or "").strip(), {})
+    _zone = tuple(_cfg.get("plate_zone") or (0.25, 0.75, 0.78))
+    _pc = "silver" if (_cfg.get("shield") == "silver" or "серебр" in (style_notes or "").lower()) else "gold"
+    final, engraved = (_engrave_shield(raw, person_latin, zone=_zone, plate_color=_pc)
                        if person_latin.strip() and not _ps else (raw, False))
     # Трим пустых полей студийного фона вокруг рамы (30.07: из-за полей фото
     # на мультислайдах выглядели разномасштабными). Packshot не тримим.
