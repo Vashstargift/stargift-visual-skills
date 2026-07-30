@@ -50,14 +50,11 @@ RULES = """Ты пишешь подписи лотов для галереи Sta
 
 
 def _api_key() -> str:
-    out = subprocess.run(
-        ["ssh", "-i", "/Users/docbrown/.ssh/id_ed25519", "-o", "BatchMode=yes",
-         "stargift@stargift.beget.tech",
-         "grep '^ANTHROPIC_API_KEY=' ~/stargift.ru/.env | cut -d= -f2"],
-        capture_output=True, text=True, timeout=40)
-    key = out.stdout.strip().splitlines()[-1] if out.stdout.strip() else ""
+    # Публичная версия: ключ из окружения (в оригинале тянулся с нашего сервера).
+    import os
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if not key:
-        raise RuntimeError("нет ANTHROPIC_API_KEY")
+        raise RuntimeError("нет ANTHROPIC_API_KEY — задай переменную окружения")
     return key
 
 
