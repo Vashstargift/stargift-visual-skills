@@ -350,6 +350,42 @@ def frame_cinema_composite(item_path: str, poster_path: str, person_latin: str =
     return {"path": str(out), "shield_engraved": engraved}
 
 
+def _auto_crop_sheet(path):
+    """Вырезать сам экспонат (светлый лист/фото) со снимка на тёмном столе.
+    Менеджеры фотографируют экспонат на поверхности — без этого фон стола
+    попадает внутрь рамы (инцидент 31.07, фото Фалдо от Насти).
+    Возвращает PIL.Image (исходник, если светлой области не нашлось)."""
+    from PIL import Image
+    im = Image.open(path).convert("RGB")
+    W, H = im.size
+    small = im.resize((240, max(1, int(240 * H / W))))
+    sw, sh = small.size
+    px = small.load()
+    # порог: экспонат заметно светлее фона стола
+    vals = sorted(sum(px[x, y]) / 3 for y in range(sh) for x in range(sw))
+    if not vals:
+        return im
+    dark, light = vals[len(vals) // 10], vals[-len(vals) // 10]
+    if light - dark < 55:          # однородный кадр — резать нечего
+        return im
+    thr = dark + (light - dark) * 0.55
+    xs, ys = [], []
+    for y in range(sh):
+        for x in range(sw):
+            if sum(px[x, y]) / 3 > thr:
+                xs.append(x); ys.append(y)
+    if len(xs) < 200:
+        return im
+    xs.sort(); ys.sort()
+    lo = len(xs) // 100                     # отбрасываем блики-выбросы
+    kx, ky = W / sw, H / sh
+    box = (max(0, int(xs[lo] * kx) - 4), max(0, int(ys[lo] * ky) - 4),
+           min(W, int(xs[-1 - lo] * kx) + 4), min(H, int(ys[-1 - lo] * ky) + 4))
+    if (box[2] - box[0]) < W * 0.25 or (box[3] - box[1]) < H * 0.25:
+        return im
+    return im.crop(box)
+
+
 def latest_render() -> str | None:
     """Путь к самому свежему сгенерированному оформлению (для «поставь последнее»)."""
     jpgs = sorted(OUT_DIR.glob("framed-*.jpg"), key=lambda f: f.stat().st_mtime)
@@ -386,6 +422,42 @@ def frame_exhibit_photo(photo_path: str, person_latin: str, style_notes: str = "
         frame_style = frame_style or meta.get("frame_style", "")
         prev = meta.get("notes", "")
         style_notes = (prev + ". " + style_notes).strip(". ") if prev else style_notes
+    _cfg0 = approved_styles().get("styles", {}).get((frame_style or "").strip(), {})
+    if _cfg0.get("scene_template") and _cfg0.get("win_left"):
+        # ШАБЛОННАЯ сборка (как кино-композит): сцена фиксированная, фото
+        # вклеивается локально contain-ом в окно, шильд гравируется по plate_box.
+        # Мгновенно, бесплатно, без генераторных фантазий (glass-float 31.07).
+        import json as _json
+        from PIL import Image as _Img
+        base = _Img.open(_cfg0["scene_template"]).convert("RGB")
+        # вырезаем сам экспонат: менеджеры снимают лист на тёмном столе, иначе
+        # фон стола попадает внутрь рамы (инцидент 31.07, фото Фалдо)
+        img = _auto_crop_sheet(photo_path)
+        l, t, r, b = _cfg0["win_left"]
+        w, h = r - l, b - t
+        fill = float(_cfg0.get("win_fill") or 0.82)   # фото «парит», вокруг стекло
+        iw, ih = img.size
+        k = min(w * fill / iw, h * fill / ih)
+        nw, nh = int(iw * k), int(ih * k)
+        img = img.resize((nw, nh), _Img.LANCZOS)
+        px, py = l + (w - nw) // 2, t + (h - nh) // 2
+        base.paste(_Img.new("RGB", (nw + 10, nh + 10), (178, 178, 178)), (px - 5, py - 5))
+        base.paste(img, (px, py))
+        buf = io.BytesIO()
+        base.save(buf, "JPEG", quality=92)
+        raw = buf.getvalue()
+        _pc0 = "silver" if _cfg0.get("shield") == "silver" else "gold"
+        final, engraved = (_engrave_shield(raw, person_latin, plate_box=_cfg0.get("plate_box"),
+                                           plate_color=_pc0)
+                           if person_latin.strip() else (raw, False))
+        OUT_DIR.mkdir(parents=True, exist_ok=True)
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        out = OUT_DIR / f"framed-{stamp}.jpg"
+        out.write_bytes(final)
+        (OUT_DIR / f"framed-{stamp}.json").write_text(_json.dumps(
+            {"source": photo_path, "person": person_latin, "notes": style_notes,
+             "frame_style": frame_style}, ensure_ascii=False))
+        return {"path": str(out), "shield_engraved": engraved}
     raw = _higgsfield_frame(photo_path, style_notes, frame_style)
     _ps = approved_styles().get("styles", {}).get((frame_style or "").strip(), {}).get("packshot")
     # Зона пластины — только нижняя полоса паспарту: тёплые тона на самом фото
