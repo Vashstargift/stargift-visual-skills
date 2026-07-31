@@ -9,9 +9,9 @@
         "/Users/docbrown/stargift-framing-tests/ref-framing-mbappe.jpg"
       ],
       "for": [
-        "фото с автографом",
         "постеры",
-        "универсальный вариант по умолчанию"
+        "спорт-атрибутика",
+        "универсальный запасной"
       ]
     },
     "photo-brown-velvet": {
@@ -192,6 +192,21 @@
         0.3,
         0.7,
         0.9
+      ]
+    },
+    "photo-velvet-classic": {
+      "title": "Классика фото-оформления: бархат/замша в тон фото, тонкий золотой кант (ГЛАВНЫЙ стиль фотоэкспонатов)",
+      "prompt": "тонкая классическая рама (тёмная или золотая), БАРХАТНОЕ или замшевое паспарту глубокого цвета В ТОН фотографии, ТОНКИЙ золотой кант вокруг окна (не широкая золотая полоса!), фотография с узкой белой каймой, плоская музейная подача",
+      "refs": [
+        "/Users/docbrown/stargift-framing-tests/refs-catalog/photo-hvorostovsky-green-velvet.jpg",
+        "/Users/docbrown/stargift-framing-tests/refs-catalog/photo-berry-gold-suede.jpg",
+        "/Users/docbrown/stargift-framing-tests/refs-catalog/photo-keys-gold-suede.jpg",
+        "/Users/docbrown/stargift-framing-tests/refs-catalog/photo-shayk-dark-emerald.jpg"
+      ],
+      "for": [
+        "фото с автографом — ГЛАВНЫЙ стиль",
+        "портреты",
+        "пресс-фото"
       ]
     }
   }
