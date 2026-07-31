@@ -145,13 +145,17 @@ def _higgsfield_frame(photo_path: str, style_notes: str = "", frame_style: str =
 
 
 def _find_empty_plate(im, zone=(0.20, 0.80, 0.66), plate_color="gold") -> tuple | None:
+    # zone может быть (x0, x1, y0) или (x0, x1, y0, y1) — верхняя граница нужна,
+    # когда сама рама светлая/золотая и попадает под цветовой фильтр
+    # (инцидент 31.07: серебристая рама Хепбёрн ловилась вместо таблички)
     """Пустая золотая пластина. zone=(x0, x1, y0) в долях кадра — где искать.
     Окантовка паспарту — длинные золотые ряды на всю ширину — отбрасывается
     фильтром длины ряда. Для композитов зону сужаем до правого-нижнего угла:
     детектор цеплялся за золотую рамку окна сценария (инцидент 30.07)."""
     W, H = im.size
     px = im.load()
-    zx0, zx1, zy0 = zone
+    zx0, zx1, zy0 = zone[0], zone[1], zone[2]
+    zy1 = zone[3] if len(zone) > 3 else 1.0
 
     def is_gold(c):
         # окно широкое: на тёмном фоне пластина даёт яркие блики (252,226,165)
@@ -162,7 +166,7 @@ def _find_empty_plate(im, zone=(0.20, 0.80, 0.66), plate_color="gold") -> tuple 
         return 140 < r and 110 < g < 238 and 40 < b < 200 and r > g > b and (r - b) > 45
 
     rows = {}
-    for y in range(int(H * zy0), H):
+    for y in range(int(H * zy0), int(H * zy1)):
         run, best, bl, start = 0, 0, None, None
         for x in range(int(W * zx0), int(W * zx1)):
             if is_gold(px[x, y]):
@@ -193,6 +197,12 @@ def _find_empty_plate(im, zone=(0.20, 0.80, 0.66), plate_color="gold") -> tuple 
         return None
     l = min(rows[y][0] for y in block)
     r = max(rows[y][1] for y in block)
+    # ФОРМА: настоящий шильд заметно шире своей высоты (типично 4:1).
+    # Светлые пятна на фото и планки рам таким тестом отсеиваются
+    # (инцидент 31.07: гравировка легла на фото Хепбёрн).
+    bw, bh = (r - l), (block[-1] - block[0])
+    if bh <= 0 or bw / bh < 2.5:
+        return None
     return (l + 2, block[0] + 2, r - 2, block[-1] - 2)
 
 
