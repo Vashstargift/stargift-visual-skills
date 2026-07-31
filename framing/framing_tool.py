@@ -207,7 +207,7 @@ def _find_empty_plate(im, zone=(0.20, 0.80, 0.66), plate_color="gold") -> tuple 
 
 
 def _engrave_shield(jpeg_bytes: bytes, person_latin: str, zone=(0.20, 0.80, 0.66),
-                    plate_box=None, plate_color="gold") -> tuple[bytes, bool]:
+                    plate_box=None, plate_color="gold", top_text=None) -> tuple[bytes, bool]:
     """Гравировка «PERSONALLY SIGNED BY / ИМЯ» на пустой пластине (найденной
     детектором или заданной явно plate_box). → (jpeg, гравировка_удалась)."""
     from PIL import Image, ImageDraw, ImageFont
@@ -242,14 +242,23 @@ def _engrave_shield(jpeg_bytes: bytes, person_latin: str, zone=(0.20, 0.80, 0.66
             x += w + tr
 
     name = person_latin.strip().upper()
-    s1 = fit("PERSONALLY SIGNED BY", FONT_REGULAR, int(pw * 0.88), int(ph * 0.28), 0.35)
+    top_line = (top_text if top_text is not None else "PERSONALLY SIGNED BY").strip().upper()
+    s1 = fit(top_line, FONT_REGULAR, int(pw * 0.88), int(ph * 0.28), 0.35) if top_line else None
     s2 = fit(name, FONT_BOLD, int(pw * 0.94), int(ph * 0.52), 0.12)
+    if not top_line:            # одна строка — центрируем её по пластине
+        if not s2:
+            return jpeg_bytes, False
+        h2 = s2[0].size
+        draw(name, s2, (ph - h2) // 2)
+        im.paste(plate.resize((bw, bh), Image.LANCZOS), (box[0], box[1]))
+        out = io.BytesIO(); im.save(out, "JPEG", quality=92)
+        return out.getvalue(), True
     if not s1 or not s2:
         return jpeg_bytes, False
     h1, h2 = s1[0].size, s2[0].size
     gap = int(ph * 0.13)
     top = (ph - (h1 + gap + h2)) // 2
-    draw("PERSONALLY SIGNED BY", s1, top)
+    draw(top_line, s1, top)
     draw(name, s2, top + h1 + gap)
     im.paste(plate.resize((bw, bh), Image.LANCZOS), (box[0], box[1]))
     out = io.BytesIO()
@@ -414,7 +423,8 @@ def _last_meta() -> dict | None:
         return None
 
 
-def frame_exhibit_photo(photo_path: str, person_latin: str, style_notes: str = "", frame_style: str = "") -> dict:
+def frame_exhibit_photo(photo_path: str, person_latin: str, style_notes: str = "",
+                        frame_style: str = "", plate_title: str = "", plate_sub: str = "") -> dict:
     """Полный пайплайн: фото товара → оформление в раму + гравировка шильда.
 
     photo_path="last" — правка ПОСЛЕДНЕЙ генерации: берём её ИСХОДНОЕ фото товара
@@ -477,8 +487,10 @@ def frame_exhibit_photo(photo_path: str, person_latin: str, style_notes: str = "
     _cfg = approved_styles().get("styles", {}).get((frame_style or "").strip(), {})
     _zone = tuple(_cfg.get("plate_zone") or (0.25, 0.75, 0.78))
     _pc = "silver" if (_cfg.get("shield") == "silver" or "серебр" in (style_notes or "").lower()) else "gold"
-    final, engraved = (_engrave_shield(raw, person_latin, zone=_zone, plate_color=_pc)
-                       if person_latin.strip() and not _ps else (raw, False))
+    _main = person_latin.strip() or (f'«{plate_title.strip()}»' if plate_title.strip() else "")
+    _top = None if person_latin.strip() else (plate_sub.strip() or "")
+    final, engraved = (_engrave_shield(raw, _main, zone=_zone, plate_color=_pc, top_text=_top)
+                       if _main and not _ps else (raw, False))
     # Трим пустых полей студийного фона вокруг рамы (30.07: из-за полей фото
     # на мультислайдах выглядели разномасштабными). Packshot не тримим.
     if not _ps:

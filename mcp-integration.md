@@ -8,7 +8,8 @@
 ```
 def exhibit_photo_frame(tg_user_id: str, photo_path: str, person_latin: str = "",
                         style_notes: str = "", frame_style: str = "",
-                        poster_path: str = "")
+                        poster_path: str = "", plate_title: str = "",
+                        plate_sub: str = "")
 ```
 
 Оформить РЕАЛЬНОЕ фото экспоната «в раму» (наш фирменный вид: чёрная рама,
@@ -19,6 +20,11 @@ def exhibit_photo_frame(tg_user_id: str, photo_path: str, person_latin: str = ""
     «оформи фото Бекхэма из подборки в раму»), ЛИБО строка "last" — правка ПОСЛЕДНЕЙ
     генерации (используй, когда менеджер отвечает на присланное ботом фото оформления:
     «на чёрном фоне», «шильд больше» → photo_path="last", style_notes=правка).
+    plate_title/plate_sub — для экспонатов БЕЗ АВТОГРАФА (гравюры, старинные книги,
+    документы без подписи): на шильд идёт НАЗВАНИЕ в кавычках (plate_title) и ниже
+    мелко год + издание (plate_sub, напр. «1601, Георг Браун и Франс Хогенберг»;
+    для книг — год и издательство). Правило Вашика 31.07: пустых шильдов не бывает —
+    есть автограф → person_latin, нет автографа → plate_title + plate_sub.
     person_latin — имя ЛАТИНИЦЕЙ для шильда («LIONEL MESSI»). ПЕРЕДАВАЙ ВСЕГДА
     (стандарт приёмки: шильд не бывает пустым): персона известна из карточки/контекста —
     транслитерируй общепринятым написанием; команда — название команды латиницей.
@@ -43,7 +49,6 @@ def exhibit_photo_frame(tg_user_id: str, photo_path: str, person_latin: str = ""
     После согласования менеджером: фото карточки — через catalog_photo_update;
     фото в ПОДБОРКЕ — пересобери make_presentation_premium, подставив путь результата
     в photo_url лота (локальные пути поддерживаются).
-
 
 ## catalog_photo_update
 
