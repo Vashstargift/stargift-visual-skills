@@ -195,16 +195,15 @@
       ]
     },
     "photo-velvet-classic": {
-      "title": "Классика фото-оформления: бархат/замша в тон фото, тонкий золотой кант (ГЛАВНЫЙ стиль фотоэкспонатов)",
-      "prompt": "тонкая классическая рама (тёмная или золотая), БАРХАТНОЕ или замшевое паспарту глубокого цвета В ТОН фотографии, ТОНКИЙ золотой кант вокруг окна (не широкая золотая полоса!), фотография с узкой белой каймой, плоская музейная подача",
+      "title": "АКТУАЛЬНЫЙ канон фото (по топам: Пачино/Лоу/Ричи): широкая тёмная рама, замша/бархат, фото на стекле",
+      "prompt": "ШИРОКАЯ тёмная фактурная классическая рама, замшевое или бархатное паспарту приглушённого глубокого тона В ТОН фотографии (серый, зелёный, синий), фотография словно ПАРИТ на стекле над паспарту с мягкой тенью по краям, БЕЗ золотого канта и окантовок, современная музейная подача",
       "refs": [
-        "/Users/docbrown/stargift-framing-tests/refs-catalog/photo-hvorostovsky-green-velvet.jpg",
-        "/Users/docbrown/stargift-framing-tests/refs-catalog/photo-berry-gold-suede.jpg",
-        "/Users/docbrown/stargift-framing-tests/refs-catalog/photo-keys-gold-suede.jpg",
-        "/Users/docbrown/stargift-framing-tests/refs-catalog/photo-shayk-dark-emerald.jpg"
+        "/Users/docbrown/stargift-framing-tests/refs-catalog/photo-pacino-scarface-grey-suede.jpg",
+        "/Users/docbrown/stargift-framing-tests/refs-catalog/photo-judelaw-green-suede.jpg",
+        "/Users/docbrown/stargift-framing-tests/refs-catalog/photo-guyritchie-blue-velvet.jpg"
       ],
       "for": [
-        "фото с автографом — ГЛАВНЫЙ стиль",
+        "фото с автографом — ГЛАВНЫЙ стиль (актуальный канон по топам)",
         "портреты",
         "пресс-фото"
       ]
